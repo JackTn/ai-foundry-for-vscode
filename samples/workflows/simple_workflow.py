@@ -17,9 +17,6 @@ from agent_framework import (
 )
 from agent_framework.azure import AzureOpenAIChatClient
 from agent_framework.observability import setup_observability
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # =============================================================================
 # USER CONFIGURATION - SET THESE AS ENVIRONMENT VARIABLES

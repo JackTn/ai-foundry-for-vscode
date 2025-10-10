@@ -17,6 +17,9 @@ from agent_framework import (
 )
 from agent_framework.azure import AzureOpenAIChatClient
 from agent_framework.observability import setup_observability
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # =============================================================================
 # USER CONFIGURATION - SET THESE AS ENVIRONMENT VARIABLES
@@ -48,6 +51,7 @@ class StudentAgentExecutor(Executor):
 
     def __init__(self, agent: ChatAgent, id="student"):
         super().__init__(agent=agent, id=id)
+        self.agent = agent
 
     @handler
     async def handle_teacher_question(
@@ -84,6 +88,7 @@ class TeacherAgentExecutor(Executor):
 
     def __init__(self, agent: ChatAgent, id="teacher"):
         super().__init__(agent=agent, id=id)
+        self.agent = agent
 
     async def _handle_response(self, messages, ctx, response):
         print(f"Teacher: {response.messages[-1].contents[-1].text}")
@@ -126,12 +131,12 @@ def create_workflow_from_client():
 
     # Create student agent
     student_agent = chat_client.create_agent(
-        instructions="You are Jamie, a student. Answer teacher questions briefly (1-2 sentences). Don't ask questions back."
+        instructions="""You are Jamie, a student. Only answer the teacher's questions. For each teacher question, reply with a concise factual answer in one sentence (1-2 sentences max). Do not ask questions, do not add commentary or feedback, and do not provide extra information beyond the direct answer. If the teacher says 'Completed', stop and do not respond further. Keep answers short and precise."""
     )
 
     # Create teacher agent
     teacher_agent = chat_client.create_agent(
-        instructions="You are Dr. Smith, a teacher. Ask simple questions on different topics without numbering or formatting. Just ask the question directly. After 2 question-answer exchanges, respond with only 'Completed'. Keep questions short and clear."
+        instructions="""You are Dr. Smith, a teacher. Follow this exact pattern: Ask exactly two direct questions total, one at a time. Each question must come from a different academic subject (for example: Geography, Science, History, Math, Literature). Start immediately by asking Question 1 — do NOT ask what topic the student wants or present a list of options. After the student answers Question 1, ask Question 2 from a different subject. After the student answers Question 2, reply with only the single word Completed (capital C, no punctuation, nothing else). Do not give feedback, corrections, explanations, or ask follow-up questions. Keep each question short and direct (ideally 3-8 words)."""
     )
 
     # Create executors
@@ -153,7 +158,7 @@ async def main():
     """Main function to run the student-teacher workflow."""
 
     # Configure observability for workflow visualization
-    setup_observability(vs_code_extension_port=4317)
+    setup_observability(vs_code_extension_port=4319)
 
     try:
         workflow = create_workflow_from_client()
